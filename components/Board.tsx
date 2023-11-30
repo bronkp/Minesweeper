@@ -193,11 +193,6 @@ const Board: React.FC = () => {
     }
     //rest of game loop
     else {
-      //There is no setBoard state because react states are weird
-      //states are immutable, but if a state is an array the contains ONLY
-      //objects and the objects are changed, the state actually does reflect this
-      //react does not realize that this state was changed, but it is in the array and on the frontend
-      //basically during tile press the state is being changed without a setstate command
       !gameOver && !win && tilePress(clickX, clickY, board);
     }
   };
