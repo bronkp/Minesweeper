@@ -15,9 +15,6 @@ pnpm dev
 bun dev
 ```
 
-<<<<<<< HEAD
-Open [http://localhost:3000](http://localhost:3000) 
-=======
 Open [http://localhost:3000](http://localhost:3000) 
 
->>>>>>> 4257415374bda6fe0397909b57e6a25311455fd0
+
