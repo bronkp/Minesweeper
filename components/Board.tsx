@@ -13,7 +13,7 @@ import { useEffect, useState } from "react";
 import { GiLandMine } from "react-icons/gi";
 import { BsFillFlagFill } from "react-icons/bs";
 import Settings from "./Settings";
-import styles from "../../src/app/page.module.css";
+import styles from "../src/app/page.module.css";
 
 const Board: React.FC = () => {
   type Tile = {
