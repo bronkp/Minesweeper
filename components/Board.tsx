@@ -13,7 +13,7 @@ import { useEffect, useState } from "react";
 import { GiLandMine } from "react-icons/gi";
 import { BsFillFlagFill } from "react-icons/bs";
 import Settings from "./Settings";
-import styles from "../src/app/page.module.css";
+import styles from "../../src/app/page.module.css";
 
 const Board: React.FC = () => {
   type Tile = {
@@ -117,6 +117,11 @@ const Board: React.FC = () => {
       clickY--;
       //setting tile to the number of surrounding bombs
       clickedTile.tile = count;
+      //possible flag chord fix
+      if (clickedTile.flagged) {
+        setFlagCount(flagCount - 1);
+        clickedTile.flagged = false;
+      }
       //after confirming there are no bombs the search loops in all directions
       //it does this until reaching a piece that touches a bomb
       if (count == 0 && clickX < 16 && clickY < 16) {
@@ -144,18 +149,23 @@ const Board: React.FC = () => {
       clickedTile.flagged
     ) {
       return;
-    }
-    let newBoard = tileLoop(clickX, clickY, board);
-    setTurnCount(turnCount + 1);
-    let win = true;
-    newBoard.forEach((row) => {
-      row.forEach((tile: Tile) => {
-        if (tile.tile == "Clear") win = false;
+    } else {
+      let newBoard = tileLoop(clickX, clickY, board);
+      setTurnCount(turnCount + 1);
+      let win = true;
+      let flags = 0;
+      newBoard.forEach((row) => {
+        row.forEach((tile: Tile) => {
+          if (tile.tile == "Clear") win = false;
+          if (tile.flagged) flags++;
+        });
       });
-    });
-    setWin(win);
-    win && setEmote("./onWin.gif");
-    return newBoard;
+      setFlagCount(flags);
+
+      setWin(win);
+      win && setEmote("./onWin.gif");
+      return newBoard;
+    }
   };
 
   const onFlag = (clickX: number, clickY: number) => {
@@ -183,6 +193,11 @@ const Board: React.FC = () => {
     }
     //rest of game loop
     else {
+      //There is no setBoard state because react states are weird
+      //states are immutable, but if a state is an array the contains ONLY
+      //objects and the objects are changed, the state actually does reflect this
+      //react does not realize that this state was changed, but it is in the array and on the frontend
+      //basically during tile press the state is being changed without a setstate command
       !gameOver && !win && tilePress(clickX, clickY, board);
     }
   };
@@ -202,21 +217,24 @@ const Board: React.FC = () => {
         for (let y = -1; y < 2; y++) {
           try {
             let search = board[clickX + x][clickY + y];
-            //checking that the tile is flagged and not the clicked tile
-            if ((x != clickX || y != clickY) && search.flagged) {
-              count++;
-            } else if (search.tile == "Bomb" && !search.flagged) {
-              //if a tile is a bomb and not flagged, a false state is triggered
-              boom = { hit: true, cords: [clickX + x, clickY + y] };
+            if (search != undefined) {
+              //checking that the tile is flagged and not the clicked tile
+              if (search.flagged) {
+                count++;
+              } else if (search.tile == "Bomb" && !search.flagged) {
+                //if a tile is a bomb and not flagged, a false state is triggered
+                boom = { hit: true, cords: [clickX + x, clickY + y] };
+              }
             }
           } catch (error) {}
         }
       }
-
       if (count == required) {
         //clicks just the bomb incase of a fail
         if (boom.hit) {
-          onClick(boom.cords[0], boom.cords[1]);
+          try {
+            onClick(boom.cords[0], boom.cords[1]);
+          } catch (error) {}
         } else {
           //if successfully flagged all bombs it clicks the rest of the tiles
           for (let x = -1; x < 2; x++) {
@@ -307,7 +325,7 @@ const Board: React.FC = () => {
                           autoClick(x, y);
                         }}
                         onMouseLeave={() => {
-                          setEmote("./Chilling.png");
+                    (!win&&!gameOver)&&setEmote("./Chilling.png");
                         }}
                         onMouseUp={() =>
                           !gameOver &&
@@ -335,8 +353,8 @@ const Board: React.FC = () => {
                             ? onClick(x, y)
                             : !firstMove && onFlag(x, y)
                         }
-                        height={["1.5em", "3em"]}
-                        width={["1.5em", "3em"]}
+                        height={["1.42em", "3em"]}
+                        width={["1.42em", "3em"]}
                         bgColor={
                           tile.tile == "0"
                             ? "gray.400"
@@ -361,12 +379,15 @@ const Board: React.FC = () => {
                               as={GiLandMine}
                             />
                           )}
-                          {tile.flagged && !win && !gameOver && (
-                            <Icon
-                              fontSize={["0.8em", "2xl"]}
-                              as={BsFillFlagFill}
-                            />
-                          )}
+                          {tile.flagged &&
+                            !win &&
+                            !gameOver &&
+                            (tile.tile == "Bomb" || tile.tile == "Clear") && (
+                              <Icon
+                                fontSize={["0.8em", "2xl"]}
+                                as={BsFillFlagFill}
+                              />
+                            )}
                         </Text>
                       </Flex>
                     ))}
